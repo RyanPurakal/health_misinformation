@@ -1,0 +1,18 @@
+.DS_Store
+.cursor/
+.cache/
+__pycache__/
+**/__pycache__/
+*.pyc
+venv/
+.venv/
+
+# Data artifacts (keep small samples only, if any)
+data/train/
+data/validation/
+*.parquet
+
+# HuggingFace / training outputs
+models/health_model/
+models/**/checkpoint-*/
+
