@@ -41,6 +41,14 @@ source venv/bin/activate
 python3 training/train_model.py
 ```
 
+## Tech stack
+
+- **Language**: Python
+- **ML**: PyTorch + Hugging Face Transformers (`Trainer`)
+- **Data**: pandas (dataset prep)
+- **Explanations**: scikit-learn (TF‑IDF similarity lookup)
+- **Scraping**: trafilatura + readability-lxml + BeautifulSoup (optional Playwright)
+
 ## What to expect (limits)
 
 - **Not every URL will work**: paywalls, logins, CAPTCHAs, PDF-only pages, and JS-heavy sites often block text extraction.
