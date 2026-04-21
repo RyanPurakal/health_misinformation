@@ -1,6 +1,9 @@
 const input = document.getElementById("claim-input");
 const submitBtn = document.getElementById("submit-btn");
 const clearBtn = document.getElementById("clear-btn");
+const copyBtn = document.getElementById("copy-btn");
+const apiStatus = document.getElementById("api-status");
+const charCount = document.getElementById("char-count");
 const resultPanel = document.getElementById("result-panel");
 const errorPanel = document.getElementById("error-panel");
 const labelBadge = document.getElementById("label-badge");
@@ -11,6 +14,9 @@ const metaDl = document.getElementById("meta-dl");
 const errorMessage = document.getElementById("error-message");
 const btnLabel = submitBtn.querySelector(".btn-label");
 const btnSpinner = submitBtn.querySelector(".btn-spinner");
+const exampleButtons = document.querySelectorAll(".example-btn");
+
+let latestResult = null;
 
 function hidePanels() {
   resultPanel.hidden = true;
@@ -21,6 +27,11 @@ function showError(msg) {
   hidePanels();
   errorMessage.textContent = msg;
   errorPanel.hidden = false;
+}
+
+function setApiStatus(ok) {
+  apiStatus.className = "api-status " + (ok ? "ok" : "down");
+  apiStatus.textContent = ok ? "Online" : "Offline";
 }
 
 function labelClass(label) {
@@ -47,6 +58,11 @@ function renderMeta(meta) {
     dd.textContent = v;
     metaDl.append(dt, dd);
   }
+}
+
+function updateCharCount() {
+  const n = input.value.length;
+  charCount.textContent = `${n} char${n === 1 ? "" : "s"}`;
 }
 
 async function analyze() {
@@ -88,6 +104,7 @@ async function analyze() {
     confidenceValue.textContent = `${(data.confidence * 100).toFixed(1)}%`;
     explanationBody.textContent = data.explanation;
     renderMeta(data.meta);
+    latestResult = data;
     resultPanel.hidden = false;
   } catch (e) {
     showError(e.message || "Network error. Is the server running?");
@@ -97,12 +114,56 @@ async function analyze() {
   }
 }
 
+async function checkApiHealth() {
+  try {
+    const res = await fetch("/api/health");
+    const data = await res.json().catch(() => ({}));
+    setApiStatus(Boolean(res.ok && data.ok));
+  } catch {
+    setApiStatus(false);
+  }
+}
+
+async function copyResult() {
+  if (!latestResult) return;
+  const text = [
+    `Label: ${latestResult.label}`,
+    `Confidence: ${(latestResult.confidence * 100).toFixed(1)}%`,
+    "",
+    "Explanation:",
+    latestResult.explanation,
+  ].join("\n");
+  try {
+    await navigator.clipboard.writeText(text);
+    copyBtn.textContent = "Copied";
+    setTimeout(() => {
+      copyBtn.textContent = "Copy result";
+    }, 1200);
+  } catch {
+    showError("Could not copy result to clipboard.");
+  }
+}
+
 submitBtn.addEventListener("click", analyze);
 clearBtn.addEventListener("click", () => {
   input.value = "";
+  updateCharCount();
   hidePanels();
+  latestResult = null;
   input.focus();
 });
+copyBtn.addEventListener("click", copyResult);
+
+for (const btn of exampleButtons) {
+  btn.addEventListener("click", () => {
+    input.value = btn.dataset.example || "";
+    updateCharCount();
+    hidePanels();
+    input.focus();
+  });
+}
+
+input.addEventListener("input", updateCharCount);
 
 input.addEventListener("keydown", (e) => {
   if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) {
@@ -110,3 +171,6 @@ input.addEventListener("keydown", (e) => {
     analyze();
   }
 });
+
+updateCharCount();
+checkApiHealth();

@@ -22,6 +22,10 @@
 
   <main class="layout">
     <section class="panel input-panel">
+      <div class="status-row">
+        <span class="status-label">API status</span>
+        <span id="api-status" class="api-status checking">Checking...</span>
+      </div>
       <label for="claim-input">Your claim or URL</label>
       <textarea
         id="claim-input"
@@ -30,6 +34,18 @@
         placeholder="Example: Vaccines cause autism&#10;Or: https://example.com/article…"
         autocomplete="off"
       ></textarea>
+      <p class="helper-row">
+        <span id="char-count">0 chars</span>
+        <span>Use Ctrl/Cmd+Enter to analyze quickly</span>
+      </p>
+      <div class="example-wrap">
+        <p class="example-title">Try an example</p>
+        <div class="example-list">
+          <button type="button" class="example-btn" data-example="Vaccines cause autism.">Vaccines cause autism</button>
+          <button type="button" class="example-btn" data-example="Drinking enough water can help reduce headaches in some people.">Water can reduce headaches</button>
+          <button type="button" class="example-btn" data-example="https://www.who.int/news-room/fact-sheets/detail/measles">WHO measles fact sheet URL</button>
+        </div>
+      </div>
       <div class="actions">
         <button type="button" id="submit-btn" class="btn-primary">
           <span class="btn-label">Analyze</span>
@@ -51,6 +67,9 @@
         </div>
         <h2 class="section-title">Explanation</h2>
         <div id="explanation-body" class="explanation-body"></div>
+        <div class="actions secondary-actions">
+          <button type="button" id="copy-btn" class="btn-ghost">Copy result</button>
+        </div>
         <details class="meta-details" id="meta-details">
           <summary>Technical details</summary>
           <dl id="meta-dl" class="meta-dl"></dl>
