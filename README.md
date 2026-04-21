@@ -32,6 +32,17 @@ Then type either:
 - a **plain claim** (example: `Vaccines cause autism`), or
 - a **URL** to an article (if extraction fails, you may need to paste the article text directly).
 
+### 3) Web UI (browser)
+
+From the project root, with the venv activated:
+
+```bash
+source venv/bin/activate
+uvicorn web.app:app --reload --host 127.0.0.1 --port 8000
+```
+
+Open **http://127.0.0.1:8000** in a browser. On startup the server loads the embedding model and trains the classifier (same work as the CLI; the first launch can take a minute).
+
 ## Training (optional)
 
 If you want to retrain the model on your data:
@@ -46,7 +57,7 @@ python3 training/train_model.py
 - **Language**: Python
 - **ML**: PyTorch + Hugging Face Transformers (`Trainer`)
 - **Data**: pandas (dataset prep)
-- **Explanations**: scikit-learn (TF‑IDF similarity lookup)
+- **Explanations**: sentence-transformers (semantic similarity to training claims)
 - **Scraping**: trafilatura + readability-lxml + BeautifulSoup (optional Playwright)
 
 ## What to expect (limits)
@@ -57,7 +68,9 @@ python3 training/train_model.py
 
 ## What’s in this repo
 
-- `test_claim.py`: interactive program you run
+- `healthchecker/service.py`: shared engine (CLI + API)
+- `web/app.py` + `web/static/`: FastAPI server and frontend
+- `test_claim.py`: interactive CLI (uses the shared engine)
 - `training/train_model.py`: training script
 - `scraper/`: article text extraction helpers
 - `data/`: dataset loaders + explanation lookup

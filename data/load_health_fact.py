@@ -1,34 +1,14 @@
-import pandas as pd
-import glob
+from data.utils import load_training_data, BINARY_NAMES
 
-def load_parquet_folder(path):
-    files = glob.glob(f"{path}/*.parquet")
-    dfs = [pd.read_parquet(f) for f in files]
-    return pd.concat(dfs, ignore_index=True)
-
-df = load_parquet_folder("data/train")  # or whichever folder
+df = load_training_data()
 
 print(f"Dataset size: {len(df)}")
-print("Columns:", df.columns)
-
-# --- NEW: Map labels to binary ---
-label_map = {
-    0: 1,   # false / misleading → misinformation
-    1: 0,   # true → reliable
-    2: 1,   # mixture → misinformation
-    3: 1,   # unproven → misinformation
-    -1: None  # drop invalid
-}
-
-df['label'] = df['label'].map(label_map)
-df = df.dropna(subset=['label'])
-df['label'] = df['label'].astype(int)
-
+print("Columns:", df.columns.tolist())
 print("Label distribution:")
-print(df['label'].value_counts())
-
-# Optional: check a few examples
+print(df["label_bin"].value_counts())
+print()
 for i in range(5):
-    print(f"Claim: {df['claim'].iloc[i]}")
-    print(f"Label: {df['label'].iloc[i]}")
+    row = df.iloc[i]
+    print(f"Claim: {row['claim']}")
+    print(f"Label: {BINARY_NAMES[row['label_bin']]}")
     print()

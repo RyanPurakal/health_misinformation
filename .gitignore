@@ -15,4 +15,5 @@ data/validation/
 # HuggingFace / training outputs
 models/health_model/
 models/**/checkpoint-*/
+models/**/*.safetensors
 

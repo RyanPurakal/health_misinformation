@@ -1,0 +1,9 @@
+pandas>=2.0
+numpy>=1.24
+scikit-learn>=1.4
+trafilatura>=2.0
+pyarrow>=14.0
+sentence-transformers>=3.0
+torch>=2.0
+fastapi>=0.115
+uvicorn[standard]>=0.32

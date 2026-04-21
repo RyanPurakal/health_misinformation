@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Health claim checker</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Literata:ital,opsz,wght@0,7..72,400;0,7..72,600;1,7..72,400&family=Syne:wght@500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/static/styles.css" />
+</head>
+<body>
+  <div class="noise" aria-hidden="true"></div>
+  <header class="site-header">
+    <p class="eyebrow">Prototype · not medical advice</p>
+    <h1>Claim checker</h1>
+    <p class="lede">
+      Paste a <strong>health-related claim</strong> or a <strong>URL</strong> to an article.
+      You get a reliability label, confidence, and an explanation when the system can ground one in its training data.
+    </p>
+  </header>
+
+  <main class="layout">
+    <section class="panel input-panel">
+      <label for="claim-input">Your claim or URL</label>
+      <textarea
+        id="claim-input"
+        name="claim"
+        rows="6"
+        placeholder="Example: Vaccines cause autism&#10;Or: https://example.com/article…"
+        autocomplete="off"
+      ></textarea>
+      <div class="actions">
+        <button type="button" id="submit-btn" class="btn-primary">
+          <span class="btn-label">Analyze</span>
+          <span class="btn-spinner" hidden aria-hidden="true"></span>
+        </button>
+        <button type="button" id="clear-btn" class="btn-ghost">Clear</button>
+      </div>
+      <p class="hint">First load downloads the embedding model and may take a minute.</p>
+    </section>
+
+    <section class="panel result-panel" id="result-panel" hidden>
+      <div class="result-inner">
+        <p class="eyebrow result-eyebrow">Outcome</p>
+        <div id="label-badge" class="label-badge" role="status"></div>
+        <div class="confidence-row">
+          <span class="conf-label">Confidence</span>
+          <meter id="confidence-meter" min="0" max="1" low="0.5" high="0.8" optimum="0.9"></meter>
+          <span id="confidence-value" class="conf-value"></span>
+        </div>
+        <h2 class="section-title">Explanation</h2>
+        <div id="explanation-body" class="explanation-body"></div>
+        <details class="meta-details" id="meta-details">
+          <summary>Technical details</summary>
+          <dl id="meta-dl" class="meta-dl"></dl>
+        </details>
+      </div>
+    </section>
+
+    <section class="panel error-panel" id="error-panel" hidden>
+      <p class="error-title">Something went wrong</p>
+      <p id="error-message" class="error-message"></p>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <p>Classifier: TF-IDF + logistic regression on your parquet data. Explanations: semantic match to training claims when similarity is high enough.</p>
+  </footer>
+
+  <script src="/static/app.js" type="module"></script>
+</body>
+</html>
