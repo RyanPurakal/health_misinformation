@@ -1,65 +1,78 @@
-# Health claim checker
+# Health Claim Checker
 
-This project is a small “health claim checker”: you give it a **health-related claim** (or a **link to an article**) and it returns a label like **RELIABLE** or **MISINFORMATION**, plus a short explanation.
+A tool that takes a health-related claim and returns **RELIABLE** or **MISINFORMATION**, a confidence score, and a short explanation. Built for learning and prototyping — not medical advice.
 
-It’s meant for learning and prototyping—not as medical advice.
+## Architecture
 
-## What it does
+The project has two independent layers that can be used separately or together:
 
-- **Checks a claim** and returns a label + confidence score.
-- **Optionally uses article text**: if you paste a URL, it tries to extract the main article text and use that as extra context.
-- **Shows an explanation**: it tries to reuse explanations from the dataset; if it can’t find a close match, it shows a generic explanation based on the predicted label.
+```
+┌─────────────────────────────────────────────────────────┐
+│  Web app layer  (app.py + frontend/)                    │
+│                                                         │
+│  Browser → POST /api/predict → FastAPI (app.py)         │
+│                                    │                    │
+│                              TF-IDF + LogReg            │
+│                           (model/claim_model.joblib)    │
+└─────────────────────────────────────────────────────────┘
 
-## How to use it
+┌─────────────────────────────────────────────────────────┐
+│  Research / fine-tuning layer  (training/ + data/)      │
+│                                                         │
+│  data/train/*.parquet                                   │
+│       │                                                 │
+│       ▼                                                 │
+│  training/train_model.py  (fine-tunes DistilBERT)       │
+│       │                                                 │
+│       ▼                                                 │
+│  models/bert_model/  (saved weights + tokenizer)        │
+│       │                                                 │
+│       ▼                                                 │
+│  models/bert_classifier.py  → {label, confidence}       │
+│       │                                                 │
+│  llm/explanation_generator.py  → explanation text       │
+└─────────────────────────────────────────────────────────┘
+```
 
-### 1) Install
+## Quick start — web app
 
 ```bash
-cd /path/to/healthinfo
-python3 -m venv venv
-source venv/bin/activate
+python3 -m venv .venv && source .venv/bin/activate
 pip install -r requirements.txt
+python3 train_model.py        # trains and saves model/claim_model.joblib
+uvicorn app:app --reload --port 8080
+# open http://localhost:8080
 ```
 
-### 2) Run (interactive)
+## Quick start — DistilBERT research stack
 
 ```bash
-source venv/bin/activate
-python3 test_claim.py
+source .venv/bin/activate
+python3 training/train_model.py   # fine-tunes DistilBERT; saves to models/bert_model/
 ```
 
-Then type either:
-- a **plain claim** (example: `Vaccines cause autism`), or
-- a **URL** to an article (if extraction fails, you may need to paste the article text directly).
+## Key design decisions
 
-## Training (optional)
+- **Two classifiers, different trade-offs**: the web app uses TF-IDF + LogisticRegression for fast, dependency-light serving. The research stack fine-tunes DistilBERT with article context for higher accuracy (78% overall, 67% macro F1).
+- **Article context matters**: DistilBERT is trained on `claim + article_text` concatenated. Claim-only accuracy is lower — confidence scores below ~65% signal missing context.
+- **Class-weighted loss**: the training dataset is ~4.7:1 misinformation-to-reliable. Without weighting the model ignores reliable claims; weighting raised reliable-class recall from 3% to 61%.
+- **TF-IDF explanation lookup**: returns verbatim explanations from the training set rather than generating text; falls back to a generic string when no close match is found.
 
-If you want to retrain the model on your data:
+## Limits
 
-```bash
-source venv/bin/activate
-python3 training/train_model.py
-```
+- Paywalled, JS-heavy, and PDF-only URLs often fail extraction.
+- High confidence does not mean correct — treat output as a signal, not a verdict.
 
-## Tech stack
+## Directory map
 
-- **Language**: Python
-- **ML**: PyTorch + Hugging Face Transformers (`Trainer`)
-- **Data**: pandas (dataset prep)
-- **Explanations**: scikit-learn (TF‑IDF similarity lookup)
-- **Scraping**: trafilatura + readability-lxml + BeautifulSoup (optional Playwright)
-
-## What to expect (limits)
-
-- **Not every URL will work**: paywalls, logins, CAPTCHAs, PDF-only pages, and JS-heavy sites often block text extraction.
-- **Claim-only is harder**: the model can do worse when you provide only a short claim with no article context.
-- **Confidence isn’t truth**: a high confidence score can still be wrong.
-
-## What’s in this repo
-
-- `test_claim.py`: interactive program you run
-- `training/train_model.py`: training script
-- `scraper/`: article text extraction helpers
-- `data/`: dataset loaders + explanation lookup
-
-
+| Path | Responsibility |
+|---|---|
+| `app.py` | FastAPI server — loads model at startup, serves `/api/predict` and static frontend |
+| `train_model.py` | Trains TF-IDF + LogReg pipeline; saves `model/claim_model.joblib` |
+| `frontend/` | Browser UI — calls the API; includes a JS-only fallback classifier |
+| `model/` | Saved sklearn model artifact |
+| `data/` | Parquet dataset loading and label remapping utilities |
+| `models/` | DistilBERT inference wrapper and saved fine-tuned weights |
+| `training/` | DistilBERT fine-tuning script |
+| `llm/` | TF-IDF nearest-neighbour explanation retrieval |
+| `notebooks/` | One-off script to download the HuggingFace dataset |

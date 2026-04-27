@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Health Claim Checker</title>
+    <link rel="stylesheet" href="/frontend/styles.css" />
+  </head>
+  <body>
+    <main class="shell">
+      <h1>Health Claim Checker</h1>
+      <p class="sub">Model-backed prediction (TF-IDF + Logistic Regression)</p>
+
+      <label for="claim">Claim</label>
+      <textarea id="claim" rows="5" placeholder="Type a health claim..."></textarea>
+      <button id="predictBtn">Predict</button>
+
+      <section id="result" class="card hidden">
+        <p><strong>Label:</strong> <span id="label"></span></p>
+        <p><strong>Confidence:</strong> <span id="confidence"></span></p>
+        <p><strong>Misinformation Probability:</strong> <span id="misinfoProb"></span></p>
+        <p><strong>Explanation:</strong> <span id="explanation"></span></p>
+      </section>
+
+      <p id="error" class="error hidden"></p>
+    </main>
+
+    <script src="/frontend/script.js"></script>
+  </body>
+</html>
