@@ -1,3 +1,7 @@
+"""
+FastAPI server for the web app layer. Loads the sklearn model once at startup
+(fail-fast if missing), then serves POST /api/predict and the static frontend.
+"""
 from pathlib import Path
 
 import joblib

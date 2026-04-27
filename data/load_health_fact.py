@@ -1,3 +1,7 @@
+"""
+Exploratory script: loads all parquet files from data/train/, applies the
+4-class → binary label remap, and prints size, distribution, and sample rows.
+"""
 import pandas as pd
 import glob
 

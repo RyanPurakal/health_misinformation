@@ -1,3 +1,7 @@
+"""
+Sanity-check script: loads the training parquet files, remaps labels to binary
+(0 = reliable, 1 = misinformation), and prints the resulting class distribution.
+"""
 import pandas as pd
 import glob
 

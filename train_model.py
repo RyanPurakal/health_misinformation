@@ -1,3 +1,7 @@
+"""
+Trains a TF-IDF + LogisticRegression pipeline on a small hardcoded example set
+and saves the fitted model to model/claim_model.joblib for use by app.py.
+"""
 from pathlib import Path
 
 import joblib

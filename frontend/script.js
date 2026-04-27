@@ -1,3 +1,7 @@
+// Frontend logic for the Health Claim Checker UI.
+// First half: calls POST /api/predict on the FastAPI backend (requires uvicorn running).
+// Second half: a self-contained keyword classifier that runs entirely in the browser as a fallback.
+
 const claimInput = document.getElementById("claim");
 const predictBtn = document.getElementById("predictBtn");
 const resultEl = document.getElementById("result");
