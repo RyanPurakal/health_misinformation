@@ -1,63 +1,54 @@
 """
-FastAPI server for the web app layer. Loads the sklearn model once at startup
-(fail-fast if missing), then serves POST /api/predict and the static frontend.
+FastAPI server for the web app layer. Loads the fine-tuned DistilBERT classifier
+and TF-IDF explanation index once at startup (fail-fast if models/bert_model/ is
+missing), then serves POST /api/predict and the static frontend. Response shape
+is unchanged from the previous sklearn version so the frontend needs no edits.
 """
 from pathlib import Path
 
-import joblib
 from fastapi import FastAPI
 from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 
+from models.bert_classifier import HealthClaimClassifier
+from llm.explanation_generator import ExplanationGenerator
+
 
 BASE_DIR = Path(__file__).resolve().parent
-MODEL_PATH = BASE_DIR / "model" / "claim_model.joblib"
 
 app = FastAPI(title="Health Claim Checker")
 
 
 class ClaimRequest(BaseModel):
     claim: str
+    article_text: str = ""  # optional — accuracy is higher when provided
 
 
-def load_model():
-    if not MODEL_PATH.exists():
-        raise RuntimeError(
-            f"Model not found at {MODEL_PATH}. Run `python3 train_model.py` first."
-        )
-    return joblib.load(MODEL_PATH)
-
-
-model = None
+classifier: HealthClaimClassifier | None = None
+explainer: ExplanationGenerator | None = None
 
 
 @app.on_event("startup")
 def startup_event():
-    global model
-    model = load_model()
+    global classifier, explainer
+    classifier = HealthClaimClassifier()
+    explainer = ExplanationGenerator()
 
 
 @app.post("/api/predict")
 def predict(payload: ClaimRequest):
-    text = payload.claim.strip()
-    if not text:
+    claim = payload.claim.strip()
+    if not claim:
         return {"error": "Claim text is required."}
 
-    probs = model.predict_proba([text])[0]
-    pred = int(model.predict([text])[0])  # 1 misinformation, 0 reliable
-    misinformation_prob = float(probs[1])
-    label = "MISINFORMATION" if pred == 1 else "RELIABLE"
-    confidence = misinformation_prob if pred == 1 else 1.0 - misinformation_prob
-
-    if pred == 1:
-        explanation = "The model found language patterns commonly seen in misleading claims."
-    else:
-        explanation = "The model found language patterns more consistent with reliable claims."
+    result = classifier.predict(claim, payload.article_text)
+    explanation = explainer.get_explanation(claim, result["label_id"])
+    misinformation_prob = result["probs"]["MISINFORMATION"]
 
     return {
-        "label": label,
-        "confidence": round(confidence, 3),
+        "label": result["label"],
+        "confidence": round(result["confidence"], 3),
         "misinformation_probability": round(misinformation_prob, 3),
         "explanation": explanation,
     }
