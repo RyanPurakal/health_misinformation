@@ -9,10 +9,14 @@
   <body>
     <main class="shell">
       <h1>Health Claim Checker</h1>
-      <p class="sub">Powered by fine-tuned DistilBERT · For learning purposes only, not medical advice</p>
+      <p class="sub" id="modelSubtext">Loading model details...</p>
 
       <label for="claim">Health claim</label>
-      <textarea id="claim" rows="5" placeholder="e.g. Vaccines cause autism"></textarea>
+      <textarea id="claim" rows="3" placeholder="e.g. Vaccines cause autism"></textarea>
+
+      <label for="articleText">Article text <span class="required">(required — paste the article body here)</span></label>
+      <textarea id="articleText" rows="8" placeholder="Paste the full article text here..."></textarea>
+
       <button id="predictBtn">Predict</button>
 
       <section id="result" class="card hidden">

@@ -5,6 +5,12 @@ body {
   color: #e2e8f0;
 }
 
+.required {
+  color: #94a3b8;
+  font-size: 0.85em;
+  font-weight: normal;
+}
+
 .shell {
   max-width: 760px;
   margin: 40px auto;

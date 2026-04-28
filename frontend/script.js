@@ -1,11 +1,12 @@
 // Frontend logic for the Health Claim Checker UI.
-// First half: calls POST /api/predict on the FastAPI backend (requires uvicorn running).
-// Second half: a self-contained keyword classifier that runs entirely in the browser as a fallback.
+// Uses FastAPI endpoints for both model metadata and prediction.
 
 const claimInput = document.getElementById("claim");
+const articleInput = document.getElementById("articleText");
 const predictBtn = document.getElementById("predictBtn");
 const resultEl = document.getElementById("result");
 const errorEl = document.getElementById("error");
+const modelSubtextEl = document.getElementById("modelSubtext");
 
 const labelEl = document.getElementById("label");
 const confidenceEl = document.getElementById("confidence");
@@ -22,11 +23,32 @@ function clearError() {
   errorEl.textContent = "";
 }
 
+async function loadModelInfo() {
+  try {
+    const response = await fetch("/api/model-info");
+    const data = await response.json();
+    if (!response.ok || !data.model_name) {
+      throw new Error("Model info unavailable");
+    }
+    modelSubtextEl.textContent = `Powered by ${data.model_name} (${data.model_path}) \u00b7 ${data.note}`;
+  } catch (_err) {
+    modelSubtextEl.textContent = "Connected model unknown. Make sure backend is running.";
+  }
+}
+
+loadModelInfo();
+
 predictBtn.addEventListener("click", async () => {
   clearError();
   const claim = claimInput.value.trim();
+  const articleText = articleInput.value.trim();
+
   if (!claim) {
-    showError("Please enter a claim.");
+    showError("Please enter a health claim.");
+    return;
+  }
+  if (!articleText) {
+    showError("Article text is required for accurate results. Paste the article body above.");
     return;
   }
 
@@ -34,7 +56,7 @@ predictBtn.addEventListener("click", async () => {
     const response = await fetch("/api/predict", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ claim }),
+      body: JSON.stringify({ claim, article_text: articleText }),
     });
     const data = await response.json();
 
@@ -51,55 +73,4 @@ predictBtn.addEventListener("click", async () => {
   } catch (_err) {
     showError("Could not reach backend. Make sure the API server is running.");
   }
-});
-const input = document.getElementById("claimInput");
-const analyzeBtn = document.getElementById("analyzeBtn");
-const resultCard = document.getElementById("resultCard");
-const labelBadge = document.getElementById("labelBadge");
-const confidenceText = document.getElementById("confidenceText");
-const explanationText = document.getElementById("explanationText");
-
-function classifyClaim(claim) {
-  const text = claim.toLowerCase();
-  const riskyMarkers = [
-    "miracle cure",
-    "cures cancer",
-    "cure cancer",
-    "completely cures",
-    "cures all",
-    "detox",
-    "flush all toxins",
-    "secret remedy",
-    "doctors don't want you to know",
-    "cause autism",
-    "prevent every",
-  ];
-
-  if (riskyMarkers.some((marker) => text.includes(marker))) {
-    return {
-      label: "MISINFORMATION",
-      confidence: 0.79,
-      explanation: "The claim includes common misinformation-style phrasing.",
-    };
-  }
-
-  return {
-    label: "RELIABLE",
-    confidence: 0.61,
-    explanation: "No strong misinformation markers were detected in this text.",
-  };
-}
-
-analyzeBtn.addEventListener("click", () => {
-  const claim = input.value.trim();
-  if (!claim) return;
-
-  const result = classifyClaim(claim);
-  const isReliable = result.label === "RELIABLE";
-
-  labelBadge.textContent = result.label;
-  labelBadge.className = `badge ${isReliable ? "reliable" : "misinformation"}`;
-  confidenceText.textContent = `Confidence: ${result.confidence.toFixed(2)}`;
-  explanationText.textContent = result.explanation;
-  resultCard.classList.remove("hidden");
 });
