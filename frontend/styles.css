@@ -11,6 +11,50 @@ body {
   font-weight: normal;
 }
 
+.examples-section {
+  margin-top: 24px;
+  margin-bottom: 8px;
+}
+
+.examples-label {
+  margin: 0 0 10px;
+  font-size: 0.85em;
+  color: #94a3b8;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.examples-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.chip {
+  padding: 5px 12px;
+  border-radius: 999px;
+  border: 1px solid;
+  font-size: 0.8em;
+  cursor: pointer;
+  background: transparent;
+  text-align: left;
+  transition: opacity 0.15s;
+}
+
+.chip:hover {
+  opacity: 0.75;
+}
+
+.chip--reliable {
+  border-color: #22c55e;
+  color: #22c55e;
+}
+
+.chip--misinformation {
+  border-color: #f87171;
+  color: #f87171;
+}
+
 .shell {
   max-width: 760px;
   margin: 40px auto;
